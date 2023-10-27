@@ -15,6 +15,7 @@ image_tk = None
 
 def load_image(filepath=None):
     global center_canvas_container, image_original, image_tk
+    center_canvas_container
 
     if filepath == None:
         print("no file selected, creating blank image")
@@ -63,7 +64,28 @@ def btn_clear():
     load_image(filepath=None) # rewriting canvas by using the functionality of filepath=None
 
 
+def btn_autoresize():
+    global image_tk
+    dim_image = (image_original.width, image_original.height)
+    dim_canvas = (gui_center_canvas.winfo_width(), gui_center_canvas.winfo_height())
 
+    if dim_image[0] > dim_image[1]:
+        i = 0
+        ii = 1
+    else:
+        i = 1
+        ii = 0
+
+    factor = dim_canvas[i]/dim_image[i]
+
+    dim_new = [0, 0]
+    dim_new[i] = dim_canvas[i]
+    dim_new[ii] = int(dim_image[ii] * factor)
+
+    img_resized = image_original.resize(tuple(dim_new), Image.Resampling.LANCZOS) # create resized copy of image 
+    image_tk = ImageTk.PhotoImage(img_resized) 
+    gui_center_canvas.itemconfig(center_canvas_container, image=image_tk)
+    print(f'resizing the image')
 
 # GUI
 gui_window = tk.Tk() # create window instacne
@@ -78,8 +100,8 @@ gui_window.columnconfigure(2, weight=3)
 
 # configure layout of grid : rows
 gui_window.rowconfigure(0, weight=3)
-gui_window.rowconfigure(0, weight=3)
-gui_window.rowconfigure(0, weight=3)
+#gui_window.rowconfigure(1, weight=3)
+#gui_window.rowconfigure(2, weight=3)
 
 
 # FRAMES:
@@ -99,17 +121,28 @@ gui_frame_evaluation.grid(column=2, row=0, sticky=tk.E+tk.W+tk.N+tk.S)#.pack(sid
 gui_label_1 = tk.Label(gui_frame_controlls, text="Cotrolls, Settings & Configuration", bg="gray", fg="white")
 gui_controlls_button_selectfile = tk.Button(gui_frame_controlls, text="Select File", command=btn_select_file)
 gui_controlls_button_loadfile = tk.Button(gui_frame_controlls, text="Load Selected File", command=btn_load_file)
-gui_controlls_button_clear = tk.Button(gui_frame_controlls, text="Clear", command=btn_clear)
+gui_controlls_button_clear = tk.Button(gui_frame_controlls, text="Clear Canvas", command=btn_clear)
 gui_controlls_entry_filepath = tk.Entry(gui_frame_controlls, width=50)
 #gui_controlls_separator_1 = ttk.Separator(gui_frame_controlls, orient='horizontal')
+gui_controlls_button_autoresize = tk.Button(gui_frame_controlls, text="Auto resize", command=btn_autoresize)
+
+# controll frame: grid setup
+gui_frame_controlls.columnconfigure(0, weight=3)
+gui_frame_controlls.columnconfigure(1, weight=3)
+gui_frame_controlls.columnconfigure(2, weight=3)
+
 
 # controll frame: widgets layout
 gui_label_1.grid(column=0, row=0,sticky=tk.N+tk.S)
 #gui_controlls_separator_1.grid(column=0, row=1,sticky=tk.W+tk.E)
-gui_controlls_entry_filepath.grid(column=0, row=1, columnspan=2, sticky=tk.W+tk.E)
-gui_controlls_button_selectfile.grid(column=0, row=2, sticky=tk.W+tk.E)
+gui_controlls_entry_filepath.grid(column=0, row=1, columnspan=3, sticky=tk.W+tk.E)
+gui_controlls_button_selectfile.grid(column=0, row=2,  sticky=tk.W+tk.E)
 gui_controlls_button_loadfile.grid(column=1, row=2, sticky=tk.W+tk.E)
 gui_controlls_button_clear.grid(column=2, row=2, sticky=tk.W+tk.E)
+gui_controlls_button_autoresize.grid(column=0, row=3, sticky=tk.W+tk.E)
+
+
+
 
 
 # FRAME: CENTER
@@ -124,6 +157,10 @@ gui_center_canvas = tk.Canvas(gui_frame_center, width=100, height=100, xscrollco
 gui_center_canvas.config(scrollregion=gui_center_canvas.bbox(tk.ALL))
 gui_center_image_xscroll.config(command=gui_center_canvas.xview)
 gui_center_image_yscroll.config(command=gui_center_canvas.yview)
+
+# drag and drop for image
+gui_center_canvas.bind('<ButtonPress-1>', lambda event: gui_center_canvas.scan_mark(event.x, event.y))
+gui_center_canvas.bind("<B1-Motion>", lambda event: gui_center_canvas.scan_dragto(event.x, event.y, gain=1))
 
 
 # center frame: widgets layout
